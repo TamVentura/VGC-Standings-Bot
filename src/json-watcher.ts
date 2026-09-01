@@ -2,7 +2,7 @@ import axios from "axios";
 import { configManager } from "./config/config-manager";
 
 export class JSONWatcher<T> {
-  private interval: NodeJS.Timeout;
+  private interval?: NodeJS.Timeout;
 
   constructor(
     private url: string,
@@ -12,7 +12,7 @@ export class JSONWatcher<T> {
   private updateData(): void {
     this.getData()
       .then((data) => {
-        this.onChange(data);
+        return this.onChange(data);
       })
       .catch((err) => console.error(err));
   }

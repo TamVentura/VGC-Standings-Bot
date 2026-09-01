@@ -14,6 +14,7 @@ export class NewRoundEvent extends GCEvent {
     if (!data || data.length === 0) return;
 
     const currentRound = getRound(data);
+    if(!currentRound) return;
     const players = filterTugaPlayers(data);
 
     if (this.oldRound === currentRound) {

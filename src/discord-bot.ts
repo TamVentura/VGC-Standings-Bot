@@ -111,6 +111,10 @@ export class DiscordBot {
         configManager.discordToken,
       );
 
+      if (this.client.user === null) {
+        throw new Error("Client user is not available.");
+      }
+
       await rest.put(
         Routes.applicationGuildCommands(this.client.user.id, this.guild.id),
         {
@@ -125,7 +129,13 @@ export class DiscordBot {
 
   private async handleAddPlayer(interaction: ChatInputCommandInteraction) {
     const playerName = interaction.options.getString("playername");
-
+    if (playerName === null) {
+      await interaction.reply({
+        content: "❌ Player name is required.",
+        ephemeral: true,
+      });
+      return;
+    }
     configManager.addExtraPlayer(playerName);
 
     await interaction.reply({
@@ -137,6 +147,14 @@ export class DiscordBot {
   private async handleRemovePlayer(interaction: ChatInputCommandInteraction) {
     const playerName = interaction.options.getString("playername");
     const extraPlayers = configManager.extraPlayers;
+
+    if (playerName === null) {
+      await interaction.reply({
+        content: "❌ Player name is required.",
+        ephemeral: true,
+      });
+      return;
+    }
 
     if (!extraPlayers.includes(playerName)) {
       let suggestions = "";
@@ -188,7 +206,7 @@ export class DiscordBot {
     });
   }
 
-  async sendMessage(content) {
+  async sendMessage(content?: string): Promise<Message<true> | null> {
     const channel = (await this.client.channels.fetch(
       configManager.channelId,
     )) as TextChannel;
@@ -196,7 +214,8 @@ export class DiscordBot {
       throw new Error("Channel not found or not text-based.");
     return channel.send({ content });
   }
-  async sendEmbed(embeds: EmbedBuilder[]): Promise<Message<true>> {
+  async sendEmbed(embeds: EmbedBuilder[]): Promise<Message<true> | null> {
+    if (embeds.length === 0) return null;
     const channel = (await this.client.channels.fetch(
       configManager.channelId,
     )) as TextChannel;

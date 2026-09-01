@@ -55,6 +55,4 @@ export class JSONManager {
     this.stop();
     const data = await this.jsonWatcher.getData();
   }
-
-  public;
 }

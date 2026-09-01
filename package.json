@@ -6,7 +6,8 @@
     "realTest": "dotenv -- tsx src/main.ts",
     "test": "tsx test.ts",
     "start": "tsx src/main.ts",
-    "docker-build": "docker build -t tamventura01/gamecorner-standings-bot . && docker push tamventura01/gamecorner-standings-bot"
+    "docker-build": "docker build -t tamventura01/gamecorner-standings-bot . && docker push tamventura01/gamecorner-standings-bot",
+    "preinstall": "npx only-allow pnpm"
   },
   "keywords": [],
   "author": "",
@@ -29,5 +30,6 @@
     "@types/node": "^25.0.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
-  }
+  },
+  "packageManager": "pnpm@11.22.0"
 }

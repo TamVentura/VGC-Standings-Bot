@@ -20,6 +20,7 @@ export class NewTugaResultEvent extends GCEvent {
     const tugaPlayers = filterTugaPlayers(data);
     if (tugaPlayers.length === 0) return;
     const updatedTugaNames: string[] = this.getUpdatedTugaNames(tugaPlayers);
+    if (updatedTugaNames.length === 0) return;
 
     const round = getRound(tugaPlayers);
     if (!round) return;
@@ -67,7 +68,7 @@ export class NewTugaResultEvent extends GCEvent {
     updatedTugaNames: string[],
   ): EmbedBuilder[] {
     const round = getRound(players);
-
+    if (!round) return [];
     const sorted = [...players].sort((a, b) => a.placing - b.placing);
 
     const lines = sorted.map((p) => {
@@ -118,7 +119,10 @@ export class NewTugaResultEvent extends GCEvent {
     if (player.drop !== -1) {
       return "🏳️";
     }
-    const roundData = lastChildOf(Object.values(player.rounds));
+    if (!player || !player.rounds || !Object.keys(player.rounds) || Object.keys(player.rounds).length === 0) {
+      throw new Error(`Player ${player.name} has no rounds data.`);
+    }
+    const roundData = lastChildOf(Object.values(player.rounds))!;
     if (roundData.result === "W") {
       return "✅";
     } else if (roundData.result === "L") {

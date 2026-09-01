@@ -84,9 +84,10 @@ export class RoundEndedEvent extends GCEvent {
 
   private getStandingIcon(player: IPlayer): string {
     const change = this.getStandingUpdate(player);
-    if (change === null) return "🟡";
+    if (!change) return "🟡";
     if (change > 0) return "⬆️";
     if (change === 0) return "↔️";
     if (change < 0) return "⬇️";
+    return "🟡"
   }
 }
