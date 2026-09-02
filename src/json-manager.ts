@@ -1,5 +1,6 @@
 import { createHash } from "crypto";
 import { configManager } from "./config/config-manager";
+import { FinalStandingsEvent } from "./events/final-standings-event";
 import { GCEvent } from "./events/gc-event";
 import { NewRoundEvent } from "./events/new-round-event";
 import { NewTugaResultEvent } from "./events/new-tuga-result-event";
@@ -19,6 +20,7 @@ export class JSONManager {
       new NewRoundEvent(this.tournament),
       new NewTugaResultEvent(this.tournament),
       new RoundEndedEvent(this.tournament),
+      new FinalStandingsEvent(this.tournament),
     ];
 
     const url =

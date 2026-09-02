@@ -32,3 +32,11 @@ export function chunkByCharLimit(lines: string[], limit = 1000): string[] {
   if (current) chunks.push(current);
   return chunks;
 }
+
+export function cleanPlayerNameWithCountry(name: string): string {
+  if (name.length <= 4) return cleanPlayerName(name);
+
+  const country = name.slice(-4);
+
+  return `${cleanPlayerName(name)}${country}`;
+}
