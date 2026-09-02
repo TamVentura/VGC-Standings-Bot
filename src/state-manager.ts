@@ -1,3 +1,5 @@
+import { logError } from "./utils/log-utils";
+
 export class StateManager {
   private sentTournaments: string[] = [];
 
@@ -32,7 +34,7 @@ export class StateManager {
           .filter((line) => line.length > 0),
       );
     } catch (err) {
-      console.error(`Error reading state from file ${stateFile}:`, err);
+      logError(`Read state from ${stateFile}`, err);
     }
   }
 
@@ -48,7 +50,7 @@ export class StateManager {
         "utf-8",
       );
     } catch (err) {
-      console.error(`Error writing state to file ${stateFile}:`, err);
+      logError(`Write state to ${stateFile}`, err);
     }
   }
 }

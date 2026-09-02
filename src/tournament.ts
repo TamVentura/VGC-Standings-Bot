@@ -11,12 +11,7 @@ export class Tournament {
     this.jsonManager = new JSONManager(this.tournament);
   }
 
-  private stop() {
-    this.jsonManager?.stop();
-  }
-
   endTournament() {
-    this.stop();
-    this.jsonManager.endTournamet();
+    this.jsonManager?.endTournament();
   }
 }

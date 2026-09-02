@@ -7,6 +7,7 @@ import {
   cleanPlayerName,
   lastChildOf,
 } from "../utils/function-utils";
+import { logError } from "../utils/log-utils";
 import { filterTugaPlayers } from "../utils/player-utils";
 import { getRound } from "../utils/round";
 import { GCEvent } from "./gc-event";
@@ -31,7 +32,9 @@ export class NewTugaResultEvent extends GCEvent {
     if (round === this.currentRound && updatedTugaNames.length === 0) return;
 
     if (this.oldRoundMessage) {
-      this.oldRoundMessage.delete();
+      this.oldRoundMessage.delete().catch((err) => {
+        logError(`Delete round ${round} message on ${this.describe()}`, err);
+      });
     }
 
     this.oldRoundMessage = await bot.sendEmbed(
@@ -40,6 +43,10 @@ export class NewTugaResultEvent extends GCEvent {
 
     this.oldResults = tugaPlayers;
     this.currentRound = round;
+  }
+
+  private describe(): string {
+    return `${this.tournament.name} (${this.tournament.code})`;
   }
 
   private getUpdatedTugaNames(newPlayers: IPlayer[]): string[] {

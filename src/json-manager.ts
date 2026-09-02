@@ -8,6 +8,7 @@ import { RoundEndedEvent } from "./events/tournament-ends-event";
 import { IPlayer } from "./interfaces/player-interface";
 import { ITournament } from "./interfaces/tournament-interface";
 import { JSONWatcher } from "./json-watcher";
+import { logError } from "./utils/log-utils";
 import { filterTugaPlayers } from "./utils/player-utils";
 
 export class JSONManager {
@@ -49,12 +50,23 @@ export class JSONManager {
     this.oldHash = newHash;
 
     for (const event of this.events) {
-      await event.newData(data);
+      await this.runEvent(event, data);
     }
   }
 
-  public async endTournament() {
+  private async runEvent(event: GCEvent, data: IPlayer[]) {
+    try {
+      await event.newData(data);
+    } catch (err) {
+      logError(`${event.constructor.name} on ${this.describe()}`, err);
+    }
+  }
+
+  private describe(): string {
+    return `${this.tournament.name} (${this.tournament.code})`;
+  }
+
+  public endTournament() {
     this.stop();
-    const data = await this.jsonWatcher.getData();
   }
 }

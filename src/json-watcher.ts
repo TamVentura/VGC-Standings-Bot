@@ -1,5 +1,6 @@
 import axios from "axios";
 import { configManager } from "./config/config-manager";
+import { logError } from "./utils/log-utils";
 
 export class JSONWatcher<T> {
   private interval?: NodeJS.Timeout;
@@ -14,7 +15,7 @@ export class JSONWatcher<T> {
       .then((data) => {
         return this.onChange(data);
       })
-      .catch((err) => console.error(err));
+      .catch((err) => logError(`Fetch ${this.url}`, err));
   }
 
   async getData(): Promise<T> {

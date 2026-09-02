@@ -1,9 +1,11 @@
 import {
+  AutocompleteInteraction,
   ChatInputCommandInteraction,
   Client,
   EmbedBuilder,
   GatewayIntentBits,
   Guild,
+  Interaction,
   Message,
   REST,
   Routes,
@@ -12,6 +14,7 @@ import {
 } from "discord.js";
 import { ReplaySubject } from "rxjs";
 import { configManager } from "./config/config-manager";
+import { logError } from "./utils/log-utils";
 
 export class DiscordBot {
   private client = new Client({
@@ -24,55 +27,88 @@ export class DiscordBot {
   public isReady: ReplaySubject<boolean> = new ReplaySubject<boolean>(1);
 
   constructor() {
-    this.login();
-    this.client.once("ready", async () => {
-      this.isReady.next(true);
-      this.channel = (await this.client.channels.fetch(
-        configManager.channelId,
-      )) as TextChannel;
-
-      this.guild = this.channel?.guild;
-      await this.registerCommands();
+    this.login().catch((err) => {
+      logError("Discord login", err);
     });
 
-    this.client.on("interactionCreate", async (interaction) => {
-      if (interaction.guildId !== this.guild?.id) return;
-
-      if (interaction.isAutocomplete()) {
-        if (interaction.commandName === "removeplayer") {
-          const focused = interaction.options.getFocused(true);
-          if (focused.name !== "playername") return;
-          const extraPlayers = configManager.extraPlayers;
-
-          const filtered = extraPlayers.filter((player) =>
-            player.toLowerCase().startsWith(focused.value.toLowerCase()),
-          );
-
-          await interaction.respond(
-            filtered.map((player) => ({ name: player, value: player })),
-          );
-        }
-        return;
-      }
-
-      if (!interaction.isChatInputCommand()) return;
-
-      try {
-        if (interaction.commandName === "addplayer") {
-          await this.handleAddPlayer(interaction);
-        } else if (interaction.commandName === "removeplayer") {
-          await this.handleRemovePlayer(interaction);
-        } else if (interaction.commandName === "listplayers") {
-          await this.handleListPlayers(interaction);
-        }
-      } catch (error) {
-        console.error("Error handling command:", error);
-        await interaction.reply({
-          content: "An error occurred while processing the command.",
-          ephemeral: true,
-        });
-      }
+    this.client.once("ready", () => {
+      this.onReady().catch((err) => {
+        logError(`Discord ready (channel ${configManager.channelId})`, err);
+      });
     });
+
+    this.client.on("interactionCreate", (interaction) => {
+      this.onInteraction(interaction).catch((err) => {
+        logError(`Interaction ${interaction.id}`, err);
+      });
+    });
+  }
+
+  private async onReady(): Promise<void> {
+    this.isReady.next(true);
+
+    this.channel = (await this.client.channels.fetch(
+      configManager.channelId,
+    )) as TextChannel;
+
+    this.guild = this.channel?.guild;
+
+    await this.registerCommands();
+  }
+
+  private async onInteraction(interaction: Interaction): Promise<void> {
+    if (interaction.guildId !== this.guild?.id) return;
+
+    if (interaction.isAutocomplete()) {
+      await this.handleAutocomplete(interaction);
+      return;
+    }
+
+    if (!interaction.isChatInputCommand()) return;
+
+    try {
+      if (interaction.commandName === "addplayer") {
+        await this.handleAddPlayer(interaction);
+      } else if (interaction.commandName === "removeplayer") {
+        await this.handleRemovePlayer(interaction);
+      } else if (interaction.commandName === "listplayers") {
+        await this.handleListPlayers(interaction);
+      }
+    } catch (error) {
+      logError(`Command /${interaction.commandName}`, error);
+      await this.replySafely(
+        interaction,
+        "An error occurred while processing the command.",
+      );
+    }
+  }
+
+  private async handleAutocomplete(
+    interaction: AutocompleteInteraction,
+  ): Promise<void> {
+    if (interaction.commandName !== "removeplayer") return;
+
+    const focused = interaction.options.getFocused(true);
+    if (focused.name !== "playername") return;
+
+    const filtered = configManager.extraPlayers.filter((player) =>
+      player.toLowerCase().startsWith(focused.value.toLowerCase()),
+    );
+
+    await interaction.respond(
+      filtered.map((player) => ({ name: player, value: player })),
+    );
+  }
+
+  private async replySafely(
+    interaction: ChatInputCommandInteraction,
+    content: string,
+  ): Promise<void> {
+    try {
+      await interaction.reply({ content, ephemeral: true });
+    } catch (err) {
+      logError(`Reply to /${interaction.commandName}`, err);
+    }
   }
 
   private async registerCommands() {
@@ -123,7 +159,7 @@ export class DiscordBot {
       );
       console.log("Successfully registered slash commands.");
     } catch (error) {
-      console.error("Failed to register commands:", error);
+      logError("Register slash commands", error);
     }
   }
 

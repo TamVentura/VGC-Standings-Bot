@@ -3,6 +3,7 @@ import { configManager } from "./config/config-manager";
 import { DiscordBot } from "./discord-bot";
 import { ITournament } from "./interfaces/tournament-interface";
 import { Tournament } from "./tournament";
+import { logError } from "./utils/log-utils";
 import { fetchTodaysTournaments } from "./utils/scrap-tournaments";
 
 export class TournamentManager {
@@ -11,9 +12,16 @@ export class TournamentManager {
   constructor(private bot: DiscordBot) {}
 
   start() {
-    this.fetchTournaments();
+    this.runFetch();
+
     scheduleJob("0 0 * * *", () => {
-      this.fetchTournaments();
+      this.runFetch();
+    });
+  }
+
+  private runFetch() {
+    this.fetchTournaments().catch((err) => {
+      logError(`Fetch today's tournaments (${configManager.origin_url})`, err);
     });
   }
 
