@@ -10,9 +10,9 @@ export function cleanPlayerName(name: string): string {
 
 function toProperCase(str: string): string {
   return str
-    .split(" ")
+    .split(/([ '])/)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
+    .join("");
 }
 
 export function chunkByCharLimit(lines: string[], limit = 1000): string[] {
